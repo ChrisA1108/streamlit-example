@@ -71,7 +71,7 @@ def process_hbom(hbom_json):
                                                 cwe_name = cwe.get('value', "")
                                                 # Print CWE information
                                                 st.write(f'CWE for {cve_id}: {cwe_name}, Source: {cwe_source}')
-                                st.write('')
+                             
 
             if not cves_found:
                 st.write("No current CVEs for this component")
