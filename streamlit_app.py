@@ -1,76 +1,69 @@
 import requests
 import re
-import json
 import streamlit as st
 
-def parse_hbom(hbom_json):
-    results = []
+st.title("Component Data Sheet and CVE Information")
 
-    for components in hbom_json['components']:
-        supplier = components.get('supplier', {}).get('name', '')
-        if 'externalReferences' in components:
-            for i in components['externalReferences']:
-                referenceURL = i['url']
-                description = components['description']
-
-                cve_info = {
-                    'supplier': supplier,
-                    'description': description,
-                    'referenceURL': referenceURL,
-                    'cves': []
-                }
-
-                base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
-                params = {'keywordSearch': f"{description}"}
-                response = requests.get(base_url, params=params)
-
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get('totalResults', 0) > 0:
-                        cve_entries = data.get("vulnerabilities", [])
-                        for entry in cve_entries:
-                            cve_id = entry.get('cve', {}).get('id', "")
-                            cve_descriptions = entry.get('cve', {}).get('descriptions', [])
-                            cve_references = entry.get('cve', {}).get("references", [])
-
-                            cve_data = {
-                                'CVE': cve_id,
-                                'references': cve_references,
-                                'descriptions': cve_descriptions
-                            }
-
-                            cve_info['cves'].append(cve_data)
-
-                results.append(cve_info)
-        else:
-            supplier_name = components.get('supplier', {}).get('name', "")
-            description_base = components.get('description', "")
-            no_reference_info = {
-                'supplier': supplier_name,
-                'description': description_base,
-                'referenceURL': None,
-                'cves': []
-            }
-            results.append(no_reference_info)
-
-    return results
-
-# Load the JSON data from the URL
+# Load the JSON data from the provided URL
 HBOM = requests.get('https://raw.githubusercontent.com/ChrisA1108/Files/main/Zybo.json').json()
 
-# Parse the HBOM and get the results
-cve_results = parse_hbom(HBOM)
+for components in HBOM['components']:
+    supplier = components.get('supplier', {}).get('name', '')
 
-# Create a Streamlit app to display the results
-st.title('HBOM CVE Analysis')
-for cve_info in cve_results:
-    st.header(f"{cve_info['supplier']}: {cve_info['description']}")
-    if cve_info['referenceURL']:
-        st.write(f'Reference URL: {cve_info["referenceURL"]}')
-    for cve_data in cve_info['cves']:
-        st.subheader(f'CVE: {cve_data["CVE"]}')
-        for reference in cve_data['references']:
-            st.write(f'References - Source: {reference.get("source", "")}, URL: {reference.get("url", "")}')
-        for description in cve_data['descriptions']:
-            st.write(f'CVE description in {description.get("lang", "")}: {description.get("value", "")}')
-    st.write('---')
+    if 'externalReferences' in components:
+        # Check if the component has external references
+        for i in components['externalReferences']:
+            referenceURL = i['url']
+            description = components['description']
+
+            # Display supplier and description
+            st.write(f'{supplier}: {description}')
+            st.write(f'referenceURL: {referenceURL}')
+            st.write()
+
+            # Define the base URL for querying vulnerabilities
+            base_url = "https://services.nvd.nist.gov/rest/json/cves/1.0"
+
+            # Prepare the search parameters using the component description
+            params = {'keywordSearch': f"{description}"}
+            response = requests.get(base_url, params=params)
+
+            if response.status_code == 200:
+                data = response.json()
+
+                if data.get('totalResults', 0) > 0:
+                    cve_entries = data.get("result", {}).get("CVE_Items", [])
+
+                    for entry in cve_entries:
+                        cve_id = entry.get('cve', {}).get('CVE_data_meta', {}).get('ID', "")
+                        cve_descriptions = entry.get('cve', {}).get('description', {}).get('description_data', [])
+                        cve_references = entry.get('cve', {}).get("references", {}).get("reference_data", [])
+
+                        cpe_string = entry.get('configurations', {}).get('nodes', [])[0].get('cpe_match', [])[0].get('cpe_string', "")
+                        pattern = r'(.*?):(.*?):(.*?):' + re.escape(supplier.lower()) + r':'
+
+                        # Use regular expressions to find a match in the CPE string
+                        if re.findall(pattern, cpe_string):
+                            if cve_id and cve_descriptions:
+                                # Display CVE details
+                                st.write(f'CVE: {cve_id}')
+
+                                for reference in cve_references:
+                                    reference_url = reference.get("url", "")
+                                    reference_source = reference.get("source_name", "")
+                                    st.write(f'References - Source: {reference_source}, URL: {reference_url}')
+
+                                for description in cve_descriptions:
+                                    description_text = description.get('value', "")
+                                    st.write(f'CVE description: {description_text}')
+                            elif cve_id and not cve_descriptions:
+                                # Display CVE without descriptions
+                                st.write(f'CVE: {cve_id}')
+
+    else:
+        supplier_name = components.get('supplier', {}).get('name', "")
+        description_base = components.get('description', "")
+
+        # Display supplier and description if there are no external references
+        st.write(f'{supplier_name}: {description_base}')
+
