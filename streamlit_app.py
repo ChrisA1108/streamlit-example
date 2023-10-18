@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import re
-import json
 
 def process_hbom(hbom_json):
     for components in hbom_json['components']:
