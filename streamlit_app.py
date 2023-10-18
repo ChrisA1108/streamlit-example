@@ -1,8 +1,9 @@
+import streamlit as st
 import requests
 import re
-import streamlit as st
+import json
 
-def parse_hbom(hbom_json):
+def process_hbom(hbom_json):
     for components in hbom_json['components']:
         supplier = components.get('supplier', {}).get('name', '')
 
@@ -77,15 +78,13 @@ def parse_hbom(hbom_json):
 
 st.title("HBOM Component Processing")
 
-uploaded_file = st.file_uploader("Upload your HBO Max JSON file", type=["json"])
+# Allow users to upload a JSON file
+uploaded_file = st.file_uploader("Upload a JSON file", type=["json"])
 
-if uploaded_file is not None:
-    try:
-        hbom_json = json.load(uploaded_file)
-        parsed_data = parse_hbom(hbom_json)
-        st.write("Parsed Data:")
-        st.write(parsed_data)
-    except json.JSONDecodeError:
-        st.error("Invalid JSON file. Please upload a valid JSON file.")
+if uploaded_file:
+    # Read the uploaded JSON file
+    hbom_json = uploaded_file.read()
+    hbom_data = json.loads(hbom_json)
 
-
+    # Process and display the data using the Streamlit app
+    process_hbom(hbom_data)
