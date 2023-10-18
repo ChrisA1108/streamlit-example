@@ -1,13 +1,13 @@
 import streamlit as st
 import requests
 import re
-import json
 
 def process_hbom(hbom_json):
     for components in hbom_json['components']:
         supplier = components.get('supplier', {}).get('name', '')
 
         if 'externalReferences' in components:
+            cves_found = False  # Track if any CVEs were found for this component
             # Check if the component has external references
             for i in components['externalReferences']:
                 referenceURL = i['url']
@@ -29,6 +29,7 @@ def process_hbom(hbom_json):
                     data = response.json()
 
                     if data.get('totalResults', '') > 0:
+                        cves_found = True  # CVEs found for this component
                         cve_entries = data.get("vulnerabilities", {})
 
                         for entry in cve_entries:
@@ -69,6 +70,9 @@ def process_hbom(hbom_json):
                                                 # Print CWE information
                                                 st.write(f'CWE for {cve_id}: {cwe_name}, Source: {cwe_source}')
                                 st.write('')
+
+            if not cves_found:
+                st.write("No current CVEs for this component")
         else:
             supplier_name = components.get('supplier', {}).get('name', "")
             description_base = components.get('description', "")
