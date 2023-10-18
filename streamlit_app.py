@@ -1,81 +1,76 @@
-import streamlit as st
 import requests
 import re
 import json
+import streamlit as st
 
-# Function to parse HBO Max JSON
 def parse_hbom(hbom_json):
-    result = []
+    results = []
 
     for components in hbom_json['components']:
         supplier = components.get('supplier', {}).get('name', '')
-        entry = {
-            'supplier': supplier,
-            'description': components.get('description', ''),
-            'referenceURL': None,
-            'cve_entries': []  # Initialize an empty list for CVE entries
-        }
-
         if 'externalReferences' in components:
             for i in components['externalReferences']:
-                entry['referenceURL'] = i['url']
+                referenceURL = i['url']
+                description = components['description']
+
+                cve_info = {
+                    'supplier': supplier,
+                    'description': description,
+                    'referenceURL': referenceURL,
+                    'cves': []
+                }
 
                 base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
-                params = {'keywordSearch': entry['description']}
+                params = {'keywordSearch': f"{description}"}
                 response = requests.get(base_url, params=params)
 
                 if response.status_code == 200:
                     data = response.json()
                     if data.get('totalResults', 0) > 0:
-                        cve_entries = data.get("vulnerabilities", {})
-                        for cve_entry in cve_entries:
-                            cve_id = cve_entry.get('cve', {}).get('id', "")
-                            cve_descriptions = cve_entry.get('cve', {}).get('descriptions', {})
-                            cve_references = cve_entry.get('cve', {}).get("references", {})
-                            cve_weaknesses = cve_entry.get('cve', {}).get('weaknesses', {})
+                        cve_entries = data.get("vulnerabilities", [])
+                        for entry in cve_entries:
+                            cve_id = entry.get('cve', {}).get('id', "")
+                            cve_descriptions = entry.get('cve', {}).get('descriptions', [])
+                            cve_references = entry.get('cve', {}).get("references", [])
 
-                            cpe_string = cve_entry.get('cve', {}).get("configurations", {})[0].get('nodes', {})[0].get(
-                                'cpeMatch', {})[0].get('criteria', "")
-                            pattern = r'(.*?):(.*?):(.*?):' + re.escape(supplier.lower()) + r':'
+                            cve_data = {
+                                'CVE': cve_id,
+                                'references': cve_references,
+                                'descriptions': cve_descriptions
+                            }
 
-                            if re.findall(pattern, cpe_string):
-                                cve_info = {
-                                    'CVE': cve_id,
-                                    'References': [],
-                                    'Descriptions': []
-                                }
+                            cve_info['cves'].append(cve_data)
 
-                                for reference in cve_references:
-                                    reference_url = reference.get("url", "")
-                                    reference_source = reference.get("source", "")
-                                    cve_info['References'].append({
-                                        'Source': reference_source,
-                                        'URL': reference_url
-                                    })
+                results.append(cve_info)
+        else:
+            supplier_name = components.get('supplier', {}).get('name', "")
+            description_base = components.get('description', "")
+            no_reference_info = {
+                'supplier': supplier_name,
+                'description': description_base,
+                'referenceURL': None,
+                'cves': []
+            }
+            results.append(no_reference_info)
 
-                                for description in cve_descriptions:
-                                    description_text = description.get('value', "")
-                                    description_lang = description.get('lang', "")
-                                    cve_info['Descriptions'].append({
-                                        'Language': description_lang,
-                                        'Description': description_text
-                                    })
+    return results
 
-                                entry['cve_entries'].append(cve_info)  # Append CVE info to the entry
-        result.append(entry)
+# Load the JSON data from the URL
+HBOM = requests.get('https://raw.githubusercontent.com/ChrisA1108/Files/main/Zybo.json').json()
 
-    return result
+# Parse the HBOM and get the results
+cve_results = parse_hbom(HBOM)
 
-# Streamlit app
-st.title("HBO Max JSON Parser")
-
-uploaded_file = st.file_uploader("Upload your HBO Max JSON file", type=["json"])
-
-if uploaded_file is not None:
-    try:
-        hbom_json = json.load(uploaded_file)
-        parsed_data = parse_hbom(hbom_json)
-        st.write("Parsed Data:")
-        st.write(parsed_data)
-    except json.JSONDecodeError:
-        st.error("Invalid JSON file. Please upload a valid JSON file.")
+# Create a Streamlit app to display the results
+st.title('HBOM CVE Analysis')
+for cve_info in cve_results:
+    st.header(f"{cve_info['supplier']}: {cve_info['description']}")
+    if cve_info['referenceURL']:
+        st.write(f'Reference URL: {cve_info["referenceURL"]}')
+    for cve_data in cve_info['cves']:
+        st.subheader(f'CVE: {cve_data["CVE"]}')
+        for reference in cve_data['references']:
+            st.write(f'References - Source: {reference.get("source", "")}, URL: {reference.get("url", "")}')
+        for description in cve_data['descriptions']:
+            st.write(f'CVE description in {description.get("lang", "")}: {description.get("value", "")}')
+    st.write('---')
