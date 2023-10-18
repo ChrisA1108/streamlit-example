@@ -30,7 +30,7 @@ def process_hbom(hbom_json):
                     data = response.json()
 
                     if data.get('totalResults', '') > 0:
-                        cves_found = True  # CVEs found for this component
+                        
                         cve_entries = data.get("vulnerabilities", {})
 
                         for entry in cve_entries:
@@ -44,6 +44,7 @@ def process_hbom(hbom_json):
 
                             # Use regular expressions to find a match in the CPE string
                             if re.findall(pattern, cpe_string):
+                                cves_found = True  # CVEs found for this component
                                 if cve_id and cve_descriptions:
                                     # Print CVE details
                                     st.write(f'CVE: {cve_id}')
