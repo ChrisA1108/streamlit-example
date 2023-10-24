@@ -13,6 +13,8 @@ def process_hbom(hbom_json):
             for i in components['externalReferences']:
                 referenceURL = i['url']
                 description = components['description']
+                #testing
+                description = discription.split()[0]
 
                 # Print supplier and description
                 st.write(f'{supplier}: {description}')
