@@ -5,7 +5,7 @@ import json
 
 def process_hbom(hbom_json):
     for components in hbom_json['components']:
-    supplier = components.get('supplier', {}).get('name', '')
+        supplier = components.get('supplier', {}).get('name', '')
 
     if 'externalReferences' in components:
         # Check if the component has external references
