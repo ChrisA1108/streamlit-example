@@ -14,7 +14,8 @@ def process_hbom(hbom_json):
                 referenceURL = i['url']
                 description = components['description']
                 #testing
-                description = description.split()[0]
+                if description.split:
+                    description = description.split()[0]
 
                 # Print supplier and description
                 st.write(f'{supplier}: {description}')
