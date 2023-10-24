@@ -5,9 +5,8 @@ import json
 
 def process_hbom(hbom_json):
     for components in hbom_json['components']:
-    supplier = components.get('supplier', {}).get('name', '')
-
-    if 'externalReferences' in components:
+        supplier = components.get('supplier', {}).get('name', '')
+        if 'externalReferences' in components:
         # Check if the component has external references
         for i in components['externalReferences']:
             referenceURL = i['url']
@@ -85,6 +84,8 @@ def process_hbom(hbom_json):
                         st.write("")
                 if keywordFound:
                     break
+
+    
 
 st.title("HBOM Component Processing")
 
