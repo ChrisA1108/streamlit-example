@@ -5,7 +5,7 @@ import json
 
 def process_hbom(hbom_json):
     for components in hbom_json['components']:
-        supplier = components.get('supplier', {}).get('name', '')
+    supplier = components.get('supplier', {}).get('name', '')
 
     if 'externalReferences' in components:
         # Check if the component has external references
@@ -16,10 +16,9 @@ def process_hbom(hbom_json):
 
             keywordFound = False
 
-            # Print supplier and description
+            # Print supplier and description using st.write
             st.write(f'{supplier}: {description}')
             st.write(f'referenceURL: {referenceURL}')
-            st.write('')
 
             # Define the base URL for querying vulnerabilities
             base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
@@ -39,7 +38,7 @@ def process_hbom(hbom_json):
                     if data.get('totalResults', '') > 0:
                         cve_entries = data.get("vulnerabilities", {})
                         keywordFound = False
-                        # print(keyword)
+
                         for entry in cve_entries:
                             cve_id = entry.get('cve', {}).get('id', "")
                             cve_descriptions = entry.get('cve', {}).get('descriptions', {})
@@ -64,12 +63,12 @@ def process_hbom(hbom_json):
                                     for reference in cve_references:
                                         reference_url = reference.get("url", "")
                                         reference_source = reference.get("source", "")
-                                        print(f'References - Source: {reference_source}, URL: {reference_url}')
+                                        st.write(f'References - Source: {reference_source}, URL: {reference_url}')
 
                                     for description in cve_descriptions:
                                         description_text = description.get('value', "")
                                         description_lang = description.get('lang', "")
-                                        print(f'CVE description in {description_lang}: {description_text}')
+                                        st.write(f'CVE description in {description_lang}: {description_text}')
                                 elif cve_id and not cve_descriptions:
                                     # Print CVE without descriptions
                                     st.write(f'CVE: {cve_id}')
@@ -83,7 +82,7 @@ def process_hbom(hbom_json):
                                                 cwe_name = cwe.get('value', "")
                                                 # Print CWE information
                                                 st.write(f'CWE for {cve_id}: {cwe_name}, Source: {cwe_source}')
-                                st.write('')
+                        st.write("")
                 if keywordFound:
                     break
 
