@@ -3,13 +3,10 @@ import requests
 import re
 import json
 
-import requests
-import re
-import streamlit as st
-
 def process_hbom(hbom_json):
     for components in hbom_json['components']:
         supplier = components.get('supplier', {}).get('name', '')
+
         if 'externalReferences' in components:
             # Check if the component has external references
             for i in components['externalReferences']:
@@ -19,19 +16,22 @@ def process_hbom(hbom_json):
 
                 keywordFound = False
 
-                # Print supplier and description using st.write
+                # Print supplier and description
                 st.write(f'{supplier}: {description}')
                 st.write(f'referenceURL: {referenceURL}')
+                st.write('')
 
                 # Define the base URL for querying vulnerabilities
                 base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
                 # Prepare the search parameters using the component description
+
                 for keyword in keywords:
                     if keyword.lower() == supplier.lower():
                         # Skip keyword search when it's the same as the supplier
                         continue
 
+                    st.write(keyword)
                     params = {'keywordSearch': f"{keyword}"}
                     response = requests.get(base_url, params=params)
 
@@ -40,17 +40,15 @@ def process_hbom(hbom_json):
                         if data.get('totalResults', '') > 0:
                             cve_entries = data.get("vulnerabilities", {})
                             keywordFound = False
-
+                            # st.write(keyword)
                             for entry in cve_entries:
                                 cve_id = entry.get('cve', {}).get('id', "")
                                 cve_descriptions = entry.get('cve', {}).get('descriptions', {})
                                 cve_weaknesses = entry.get('cve', {}).get('weaknesses', {})
                                 cve_references = entry.get('cve', {}).get("references", {})
 
-                                cpe_string = \
-                                    entry.get('cve', {}).get("configurations", [{}])[0].get('nodes', [{}])[0].get(
-                                        'cpeMatch', [{}])[
-                                        0].get('criteria', "")
+                                cpe_string = entry.get('cve', {}).get("configurations", [{}])[0].get('nodes', [{}])[0].get(
+                                    'cpeMatch', [{}])[0].get('criteria', "")
                                 supplier = supplier.split(" ")[0]
 
                                 pattern = r'(.*?):(.*?):(.*?):' + re.escape(supplier.lower()) + r':'
@@ -84,7 +82,7 @@ def process_hbom(hbom_json):
                                                     cwe_name = cwe.get('value', "")
                                                     # Print CWE information
                                                     st.write(f'CWE for {cve_id}: {cwe_name}, Source: {cwe_source}')
-                            st.write("")
+                                    st.write()
                     if keywordFound:
                         break
 
