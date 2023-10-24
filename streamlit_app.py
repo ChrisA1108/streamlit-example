@@ -31,7 +31,7 @@ def process_hbom(hbom_json):
                         # Skip keyword search when it's the same as the supplier
                         continue
 
-                    st.write(keyword)
+                    #st.write(keyword)
                     params = {'keywordSearch': f"{keyword}"}
                     response = requests.get(base_url, params=params)
 
