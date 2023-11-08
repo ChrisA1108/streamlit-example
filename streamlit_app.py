@@ -11,7 +11,7 @@ def process_hbom(json_data):
         description = components['description']
 
         # Print supplier and description
-        st.write(f'{supplier}: {description}')
+        st.write(f'# {supplier}: {description}')
         if 'externalReferences' in components:
             # Check if the component has external references
             for i in components['externalReferences']:
