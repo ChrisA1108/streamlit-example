@@ -3,7 +3,7 @@ import re
 import time
 import streamlit as st
 
-def process_hbom_components(json_data):
+def process_hbom(json_data):
     for components in json_data['components']:
         searchByKeyword = True
         supplier = components.get('supplier', {}).get('name', '')
