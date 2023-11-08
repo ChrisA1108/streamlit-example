@@ -2,6 +2,7 @@ import requests
 import re
 import time
 import streamlit as st
+import json
 
 def process_hbom(json_data):
     for components in json_data['components']:
