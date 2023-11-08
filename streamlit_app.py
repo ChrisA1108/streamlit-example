@@ -6,6 +6,8 @@ import json
 
 def process_hbom(json_data):
     for components in json_data['components']:
+        keyCnt = 0 # count for keeping track of keys
+        cve_found = False  # Flag to check if CVEs were found
         searchByKeyword = True
         supplier = components.get('supplier', {}).get('name', '')
         description = components['description']
@@ -21,22 +23,17 @@ def process_hbom(json_data):
 
         keywords = components['name'].split('-')
         keyDesc = components['description'].replace(' ', '_')
-
+        # get original keyword count before adding alternative keys 
+        originalCnt = len(keywords)
+        keywords.append(keyDesc)
         # Define the base URL for querying vulnerabilities
         base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
-        count = 0
-        cve_found = False  # Flag to check if CVEs were found
-
-        keyCnt = 0
-        originalCnt = len(keywords)
-        keywords.append(keyDesc)
-
+        # go through each keyword to search for possible CVE's
         for keyword in keywords:
-
+            # keep track of which keywords are for what purpose
             if originalCnt == keyCnt:
                 searchByKeyword = False
-
             keyCnt += 1
 
             if keyword.lower() == supplier.lower():
@@ -49,6 +46,7 @@ def process_hbom(json_data):
                 params = {'keywordSearch': f"{keyword}"}
 
             else:
+                # search by vendor and component name
                 supplier_name = supplier.split(" ")
                 params = {'cpeName': f"cpe:2.3:h:{supplier_name[0]}:{keyword}:-:*:*:*:*:*:*:*"}
 
@@ -65,6 +63,7 @@ def process_hbom(json_data):
                     st.write("")
                     cve_entries = data.get("vulnerabilities", {})
 
+                    # go through each cve found 
                     for entry in cve_entries:
                         cve_id = entry.get('cve', {}).get('id', "")
                         cve_descriptions = entry.get('cve', {}).get('descriptions', {})
@@ -73,14 +72,7 @@ def process_hbom(json_data):
                         cve_cvss = entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {})[0]
                         exploitScore = cve_cvss['exploitabilityScore']
                         impactScore = cve_cvss['impactScore']
-
                         cve_scores = f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}'
-
-                        cpe_string = \
-                            entry.get('cve', {}).get("configurations", [{}])[0].get('nodes', [{}])[0].get(
-                                'cpeMatch', [{}])[
-                                0].get('criteria', "")
-                        supplier = supplier.split(" ")[0]
 
                         if searchByKeyword:
                             # Create a regular expression pattern that matches the keyword as a whole word
@@ -97,11 +89,13 @@ def process_hbom(json_data):
 
                                 st.write(f'nvd@nist.gov CVE Scores: {cve_scores}')
 
+                                # Print all references for all CVEs
                                 for reference in cve_references:
                                     reference_url = reference.get("url", "")
                                     reference_source = reference.get("source", "")
                                     st.write(f'References - Source: {reference_source}, URL: {reference_url}')
 
+                                # Print CVE descriptions in languages available
                                 for description in cve_descriptions:
                                     description_text = description.get('value', "")
                                     description_lang = description.get('lang', "")
