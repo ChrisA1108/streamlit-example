@@ -132,12 +132,15 @@ def process_hbom_components(json_data):
             st.write("NO CVEs FOUND")
             st.write("")
 
-# Example usage with JSON data from a file
-import json
+st.title("HBOM Component Processing")
 
-# Load JSON data from a file (replace 'your_file.json' with the actual file path)
-with open('your_file.json', 'r') as json_file:
-    json_data = json.load(json_file)
+# Allow users to upload a JSON file
+uploaded_file = st.file_uploader("Upload a JSON file", type=["json"])
 
-# Call the function to process the components
-process_hbom_components(json_data)
+if uploaded_file:
+    # Read the uploaded JSON file
+    hbom_json = uploaded_file.read()
+    hbom_data = json.loads(hbom_json)
+
+    # Process and display the data using the Streamlit app
+    process_hbom(hbom_data)
