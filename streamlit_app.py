@@ -130,7 +130,7 @@ def process_hbom(json_data):
             continue
             
         if not cve_found and not searchByKeyword:
-            st.write("## NO CVEs FOUND")
+            st.write("### NO CVEs FOUND")
             st.write("")
             
 st.title("HBOM Component Processing")
