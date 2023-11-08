@@ -57,7 +57,9 @@ def process_hbom(json_data):
 
             if response.status_code == 200:
                 data = response.json()
-                if data.get('totalResults', 0) > 0:
+                totalResults = data.get('totalResults', 0)
+                if totalResults > 0:
+                    st.write(f" ## Number of CVE's Found: {totalResults}')
                     cve_found = True  # Set the flag to True
                     keywordValid = True
                     st.write("")
@@ -79,8 +81,6 @@ def process_hbom(json_data):
                                 'cpeMatch', [{}])[
                                 0].get('criteria', "")
                         supplier = supplier.split(" ")[0]
-
-                        pattern = r'(.*?):(.*?):(.*?):' + re.escape(supplier.lower()) + r':'
 
                         if searchByKeyword:
                             # Create a regular expression pattern that matches the keyword as a whole word
