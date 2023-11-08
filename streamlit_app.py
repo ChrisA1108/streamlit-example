@@ -128,11 +128,7 @@ def process_hbom(json_data):
         if cve_found:
             # If CVEs were found, you can continue with other components
             continue
-
-        if not cve_found and not searchByKeyword:
-            st.write("NO CVEs FOUND")
-            st.write("")
-
+            
 st.title("HBOM Component Processing")
 
 # Allow users to upload a JSON file
