@@ -58,8 +58,8 @@ def process_hbom(json_data):
             if response.status_code == 200:
                 data = response.json()
                 totalResults = data.get('totalResults', 0)
-                st.write(f"### Number of CVE's Found: {totalResults}")
                 if totalResults > 0:
+                    st.write(f"### Number of CVE's Found: {totalResults}")
                     cve_found = True  # Set the flag to True
                     keywordValid = True
                     st.write("")
