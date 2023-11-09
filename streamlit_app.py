@@ -95,7 +95,7 @@ def process_hbom(HBOM):
                             if cve_id and cve_descriptions:
                                 # Print CVE details
                                 st.write(f'## CVE: {cve_id}')
-                                st.write(f'## NVD CVE Scores: \n{cve_scores}')
+                                st.write(f'### NVD CVE Scores: \n### {cve_scores}')
     
                                 for reference in cve_references:
                                     reference_url = reference.get("url", "")
