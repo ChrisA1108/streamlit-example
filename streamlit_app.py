@@ -26,7 +26,7 @@ def process_hbom(json_data):
 
         # check if keyDesc is a list or not for appending to keywords
         if isinstance(keyDesc, list):
-        keywords = keywords + keyDesc
+            keywords = keywords + keyDesc
         else:
             print("not")
 
