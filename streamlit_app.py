@@ -94,13 +94,12 @@ def process_hbom(HBOM):
                                     cve_metrics = cve_cvss.get('cvssData', {})
                                     exploitScore = cve_cvss['exploitabilityScore']
                                     impactScore = cve_cvss['impactScore']
-                                    cve_scores = f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}'
                                     integrity_Impact = cve_metrics['integrityImpact']
                                     confidentiality_Impact = cve_metrics['confidentialityImpact']
                                     availability_Impact = cve_metrics['availabilityImpact']
                                     attack_vector = cve_metrics['attackVector']
-                                    st.write(cve_metrics)
-                                    st.write(f'nvd@nist.gov CVE Scores: {cve_scores}')
+                                    st.Write("NVD CVE SCORES:
+                                    st.write(f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}')
                                     st.write(f'Attack Vector: {attack_vector}')
                                     st.write(f'Confidentiality Impact: {confidentiality_Impact}, Integrity Impact: {integrity_Impact}, Availability Impact: {availability_Impact}')
     
