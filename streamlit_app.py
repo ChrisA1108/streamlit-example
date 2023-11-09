@@ -98,7 +98,7 @@ def process_hbom(HBOM):
                                     confidentiality_Impact = cve_metrics['confidentialityImpact']
                                     availability_Impact = cve_metrics['availabilityImpact']
                                     attack_vector = cve_metrics['attackVector']
-                                    st.Write("NVD CVE SCORES:")
+                                    st.write("NVD CVE SCORES:")
                                     st.write(f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}')
                                     st.write(f'Attack Vector: {attack_vector}')
                                     st.write(f'Confidentiality Impact: {confidentiality_Impact}, Integrity Impact: {integrity_Impact}, Availability Impact: {availability_Impact}')
