@@ -28,7 +28,7 @@ def process_hbom(json_data):
         if isinstance(keyDesc, list):
             keywords = keywords + keyDesc
         else:
-            print("not")
+            keywords.append(keyDesc)
 
         keyDesc = components['description'].replace(' ', '_')
         # Define the base URL for querying vulnerabilities
