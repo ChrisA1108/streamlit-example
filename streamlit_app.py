@@ -95,12 +95,12 @@ def process_hbom(HBOM):
                             if cve_id and cve_descriptions:
                                 # Print CVE details
                                 st.write(f'## CVE: {cve_id}')
-                                st.write(f'nvd@nist.gov CVE Scores: {cve_scores}')
+                                st.write(f'## CVE Scores: {cve_scores}\nSource: nvd@nist.gov')
     
                                 for reference in cve_references:
                                     reference_url = reference.get("url", "")
                                     reference_source = reference.get("source", "")
-                                    st.write(f'References - Source: {reference_source}, URL: {reference_url}')
+                                    st.write(f'References: \nSource: {reference_source}\nURL: {reference_url}')
     
                                 for description in cve_descriptions:
                                     description_text = description.get('value', "")
@@ -118,7 +118,7 @@ def process_hbom(HBOM):
                                         for cwe in cwe_description:
                                             cwe_name = cwe.get('value', "")
                                             # Print CWE information
-                                            st.write(f'## CWE for {cve_id}: {cwe_name}, Source: {cwe_source}')
+                                            st.write(f'### CWE for {cve_id}: {cwe_name}\nSource: {cwe_source}')
     
                             st.write()
     
