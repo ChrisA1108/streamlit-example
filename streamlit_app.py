@@ -77,11 +77,6 @@ def process_hbom(HBOM):
                         cve_descriptions = entry.get('cve', {}).get('descriptions', {})
                         cve_weaknesses = entry.get('cve', {}).get('weaknesses', {})
                         cve_references = entry.get('cve', {}).get("references", {})
-                        if entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {}):
-                            cve_cvss = entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {})[0]
-                            exploitScore = cve_cvss['exploitabilityScore']
-                            impactScore = cve_cvss['impactScore']
-                            cve_scores = f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}'
     
                         if searchByKeyword:
                             # Create a regular expression pattern that matches the keyword as a whole word
@@ -94,8 +89,20 @@ def process_hbom(HBOM):
                         if keywordValid:
                             if cve_id and cve_descriptions:
                                 # Print CVE details
-                                st.write(f'## CVE: {cve_id}')
-                                st.write(f'### NVD CVE Scores: \n### {cve_scores}')
+                                if entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {}):
+                                    cve_cvss = entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {})[0]
+                                    cve_metrics = cve_cvss.get('cvssData', {})
+                                    exploitScore = cve_cvss['exploitabilityScore']
+                                    impactScore = cve_cvss['impactScore']
+                                    cve_scores = f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}'
+                                    integrity_Impact = cve_metrics['integrityImpact']
+                                    confidentiality_Impact = cve_metrics['confidentialityImpact']
+                                    availability_Impact = cve_metrics['availabilityImpact']
+                                    attack_vector = cve_metrics['attackVector']
+                                    st.write(cve_metrics)
+                                    st.write(f'nvd@nist.gov CVE Scores: {cve_scores}')
+                                    st.write(f'Attack Vector: {attack_vector}')
+                                    st.write(f'Confidentiality Impact: {confidentiality_Impact}, Integrity Impact: {integrity_Impact}, Availability Impact: {availability_Impact}')
     
                                 for reference in cve_references:
                                     reference_url = reference.get("url", "")
