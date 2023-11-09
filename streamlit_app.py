@@ -34,6 +34,12 @@ def process_hbom(json_data):
         # Define the base URL for querying vulnerabilities
         base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
+        cve_found = False  # Flag to check if CVEs were found
+
+        keyCnt = 0
+        originalCnt = len(keywords)
+        keywords.append(keyDesc)
+        
         # go through each keyword to search for possible CVE's
         for keyword in keywords:
             # keep track of which keywords are for what purpose
