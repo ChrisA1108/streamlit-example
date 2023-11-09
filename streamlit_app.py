@@ -98,7 +98,7 @@ def process_hbom(HBOM):
                                     confidentiality_Impact = cve_metrics['confidentialityImpact']
                                     availability_Impact = cve_metrics['availabilityImpact']
                                     attack_vector = cve_metrics['attackVector']
-                                    st.write("NVD CVE SCORES:")
+                                    st.write("## NVD CVE SCORES:")
                                     st.write(f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}')
                                     st.write(f'Attack Vector: {attack_vector}')
                                     st.write(f'Confidentiality Impact: {confidentiality_Impact}, Integrity Impact: {integrity_Impact}, Availability Impact: {availability_Impact}')
@@ -106,11 +106,13 @@ def process_hbom(HBOM):
                                 for reference in cve_references:
                                     reference_url = reference.get("url", "")
                                     reference_source = reference.get("source", "")
+                                    st.write("## CVE SOURCES")
                                     st.write(f'References: \nSource: {reference_source}\nURL: {reference_url}')
     
                                 for description in cve_descriptions:
                                     description_text = description.get('value', "")
                                     description_lang = description.get('lang', "")
+                                    st.write("## CVE descriptions")
                                     st.write(f'CVE description in {description_lang}: {description_text}')
                             elif cve_id and not cve_descriptions:
                                 # Print CVE without descriptions
@@ -124,7 +126,7 @@ def process_hbom(HBOM):
                                         for cwe in cwe_description:
                                             cwe_name = cwe.get('value', "")
                                             # Print CWE information
-                                            st.write(f'### CWE for {cve_id}: {cwe_name}\nSource: {cwe_source}')
+                                            st.write(f'### CWE for {cve_id}: {cwe_name}')
     
                             st.write()
     
