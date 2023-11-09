@@ -21,11 +21,16 @@ def process_hbom(json_data):
 
             st.write(f'referenceURL: {referenceURL}')
 
+        keyDesc = components['description'].split(" ")
         keywords = components['name'].split('-')
+
+        # check if keyDesc is a list or not for appending to keywords
+        if isinstance(keyDesc, list):
+        keywords = keywords + keyDesc
+        else:
+            print("not")
+
         keyDesc = components['description'].replace(' ', '_')
-        # get original keyword count before adding alternative keys 
-        originalCnt = len(keywords)
-        keywords.append(keyDesc)
         # Define the base URL for querying vulnerabilities
         base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
@@ -56,7 +61,7 @@ def process_hbom(json_data):
             if response.status_code == 200:
                 data = response.json()
                 totalResults = data.get('totalResults', 0)
-                if totalResults > 0:
+                if 0 < totalResults < 10:
                     
                     cve_found = True  # Set the flag to True
                     keywordValid = True
@@ -69,10 +74,12 @@ def process_hbom(json_data):
                         cve_descriptions = entry.get('cve', {}).get('descriptions', {})
                         cve_weaknesses = entry.get('cve', {}).get('weaknesses', {})
                         cve_references = entry.get('cve', {}).get("references", {})
-                        cve_cvss = entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {})[0]
-                        exploitScore = cve_cvss['exploitabilityScore']
-                        impactScore = cve_cvss['impactScore']
-                        cve_scores = f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}'
+                        if entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {}):
+                            cve_cvss = entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {})[0]
+                            exploitScore = cve_cvss['exploitabilityScore']
+                            impactScore = cve_cvss['impactScore']
+
+                            cve_scores = f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}'
 
                         if searchByKeyword:
                             # Create a regular expression pattern that matches the keyword as a whole word
