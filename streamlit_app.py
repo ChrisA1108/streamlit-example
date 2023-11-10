@@ -110,11 +110,11 @@ def process_hbom(HBOM):
                                     st.write(f'Exploitability Score: {exploitScore}  Impact Score: {impactScore}')
                                     st.write(f'Attack Vector: {attack_vector}')
                                     st.write(f'Confidentiality Impact: {confidentiality_Impact}, Integrity Impact: {integrity_Impact}, Availability Impact: {availability_Impact}')
-    
+
+                                st.write("### CVE Sources:")
                                 for reference in cve_references:
                                     reference_url = reference.get("url", "")
                                     reference_source = reference.get("source", "")
-                                    st.write("### CVE Sources:")
                                     st.write(f'References: \nSource: {reference_source}\nURL: {reference_url}')
 
                                 st.write("### CVE Descriptions:")
