@@ -97,6 +97,7 @@ def process_hbom(HBOM):
                         if keywordValid:
                             if cve_id and cve_descriptions:
                                 # Print CVE details
+                                st.write(f'## CVE: {cve_id}')
                                 if entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {}):
                                     cve_cvss = entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {})[0]
                                     cve_metrics = cve_cvss.get('cvssData', {})
