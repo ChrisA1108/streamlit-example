@@ -4,6 +4,13 @@ import time
 import streamlit as st
 import json
 
+import json
+import streamlit as st
+import requests
+import re
+import time
+
+
 def process_hbom(HBOM):
     for components in HBOM['components']:
         searchByKeyword = True
@@ -21,6 +28,7 @@ def process_hbom(HBOM):
     
         keyDesc = components['description'].split(" ")
         keywords = components['name'].split('-')
+        keywords.insert(0, components['description'])
     
         # check if keyDesc is a list or not for appending to keywords
         if isinstance(keyDesc, list):
