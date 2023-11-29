@@ -95,7 +95,7 @@ def cve_lookup(searchByKeyword, keyword, supplier):
                         'attack_vector': attack_vector,
                         # Add other relevant information as needed
                     })
-    time.sleep(0.5)
+    time.sleep(0.8)
 
 def process_hbom(HBOM):
     global cve_found
