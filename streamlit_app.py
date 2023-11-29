@@ -10,7 +10,7 @@ cve_found = False
 
 def cve_lookup(searchByKeyword, keyword, supplier):
     global global_cve_data, cve_found
-
+    cve_found = False
     global_cve_data = []
 
     base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
