@@ -156,7 +156,7 @@ def process_hbom(HBOM):
                 for cwe in cve_entry['cweName']:
                     st.write(f"CWE: {cwe}")
 
-                st.write(f'Exploit Score {cve_entry['exploitScore']}')
+                st.write(f"Exploit Score {cve_entry['exploitScore']}")
 
         if not cve_found and not searchByKeyword:
             st.write("NO CVEs FOUND")
