@@ -55,6 +55,7 @@ def cve_lookup(searchByKeyword, keyword, supplier):
                             cve_cvss = entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {})[0]
                             cve_metrics = cve_cvss.get('cvssData', {})
                             exploitScore = cve_cvss['exploitabilityScore']
+                            st.write(exploitScore)
                             impactScore = cve_cvss['impactScore']
                             integrity_Impact = cve_metrics['integrityImpact']
                             confidentiality_Impact = cve_metrics['confidentialityImpact']
