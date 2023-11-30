@@ -40,12 +40,15 @@ def cve_lookup(searchByKeyword, keyword, supplier):
                 cve_references = entry.get('cve', {}).get("references", {})
 
                 if searchByKeyword:
-                    # Create a regular expression pattern that matches the keyword as a whole word
-                    pattern = re.compile(r'\b' + re.escape(keyword) + r'\b', re.IGNORECASE)
                     # get cve description
                     description_textEng = cve_descriptions[0].get('value')
-                    if not re.search(pattern, description_textEng):
-                        keywordValid = False
+                    # Create a regular expression pattern that matches the keyword as a whole word
+                    for _ in keyword.split(" "):
+                        pattern = re.compile(r'\b' + re.escape(_) + r'\b', re.IGNORECASE)
+
+                        # Check if the keyword appears as a whole word in the description
+                        if not re.search(pattern, description_textEng):
+                            keywordValid = False
 
                 if keywordValid:
                     cve_found = True
