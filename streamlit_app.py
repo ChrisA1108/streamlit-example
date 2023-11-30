@@ -51,6 +51,7 @@ def cve_lookup(searchByKeyword, keyword, supplier):
                             keywordValid = False
 
                 if keywordValid:
+                    st.write(keywordValid)
                     cve_found = True
                     if cve_id and cve_descriptions:
                         # get cve metrics
