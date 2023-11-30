@@ -1,13 +1,113 @@
 import requests
 import re
 import time
-import streamlit as st
+import os
+import base64
 import json
+from typing import Dict
+import streamlit as st
 
 # Global variables to store CVE information
 global_cve_data = []
 cve_found = False
+alternative_parts_searched = False
 
+NEXAR_URL = "https://api.nexar.com/graphql"
+PROD_TOKEN_URL = "https://identity.nexar.com/connect/token"
+
+QUERY_MPN = '''
+query Search($mpn: String!) {
+    supSearchMpn(q: $mpn, limit: 1) {
+    hits
+      results {
+        part {
+          similarParts {
+              name
+              mpn
+              bestDatasheet{
+              url
+              }
+          }
+        }
+      }
+    }
+}
+'''
+
+def get_token(client_id, client_secret):
+    if not client_id or not client_secret:
+        raise Exception("client_id and/or client_secret are empty")
+
+    token = {}
+    try:
+        token = requests.post(
+            url=PROD_TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret
+            },
+            allow_redirects=False,
+        ).json()
+
+    except Exception:
+        raise
+
+    return token
+
+def decode_jwt(token):
+    return json.loads(
+        (base64.urlsafe_b64decode(token.split(".")[1] + "==")).decode("utf-8")
+    )
+
+class NexarClient:
+    def __init__(self, id, secret) -> None:
+        self.id = id
+        self.secret = secret
+        self.s = requests.session()
+        self.s.keep_alive = False
+
+        self.token = get_token(id, secret)
+        self.s.headers.update({"token": self.token.get('access_token')})
+        self.exp = decode_jwt(self.token.get('access_token')).get('exp')
+
+    def check_exp(self):
+        if self.exp < time.time() + 300:
+            self.token = get_token(self.id, self.secret)
+            self.s.headers.update({"token": self.token.get('access_token')})
+            self.exp = decode_jwt(self.token.get('access_token')).get('exp')
+
+    def get_query(self, query: str, variables: Dict) -> dict:
+        try:
+            self.check_exp()
+            r = self.s.post(
+                NEXAR_URL,
+                json={"query": query, "variables": variables},
+            )
+
+        except Exception as e:
+            print(e)
+            raise Exception("Error while getting Nexar response")
+
+        response = r.json()
+        if "errors" in response:
+            for error in response["errors"]:
+                print(error["message"])
+            raise SystemExit
+
+        return response["data"]
+
+
+
+os.environ['NEXAR_CLIENT_ID'] = '29d658fb-db21-4b9f-a017-3628569eb25f'
+os.environ['NEXAR_CLIENT_SECRET'] = 'bd8IoOy-5S13Hy2oSd9PuVnCKUCFjgM_YTiN'
+
+client_id = os.environ['NEXAR_CLIENT_ID']
+client_secret = os.environ['NEXAR_CLIENT_SECRET']
+nexar_client = NexarClient(client_id, client_secret)
+
+
+# cve lookup function
 def cve_lookup(searchByKeyword, keyword, supplier):
     global global_cve_data, cve_found
     cve_found = False
@@ -51,15 +151,12 @@ def cve_lookup(searchByKeyword, keyword, supplier):
                             keywordValid = False
 
                 if keywordValid:
-                    st.write(keywordValid)
-                    st.write(keyword)
-                    cve_found = True
+                    cve_found = True  # Set the flag to True
                     if cve_id and cve_descriptions:
                         # get cve metrics
                         if entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {}):
                             cve_cvss = entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {})[0]
                             cve_metrics = cve_cvss.get('cvssData', {})
-                            st.write(cve_metrics)
                             exploitScore = cve_cvss['exploitabilityScore']
                             impactScore = cve_cvss['impactScore']
                             integrity_Impact = cve_metrics['integrityImpact']
@@ -101,14 +198,16 @@ def cve_lookup(searchByKeyword, keyword, supplier):
                         'attack_vector': attack_vector,
                         # Add other relevant information as needed
                     })
-    time.sleep(0.8)
+    time.sleep(0.6)
 
 def process_hbom(HBOM):
-    global cve_found
+    global cve_found, alternative_parts_searched, nexar_client
+    alternative_parts = False
     for components in HBOM['components']:
         searchByKeyword = True  # start by search
         cve_found = False # Flag to check if CVEs were found
         keyCnt = 0  # keep track of what keyword
+        cve_name = components.get('name')
 
         supplier = components.get('supplier', {}).get('name', '')
         description = components['description']
@@ -123,7 +222,10 @@ def process_hbom(HBOM):
         keywords.insert(0, components['description'])
 
         if isinstance(keyDesc, list):
-            keywords = keywords + keyDesc
+            for i in range(len(keyDesc), 1, -1):
+                sub_list = keyDesc[:i]
+                joined_string = ' '.join(sub_list)
+                keywords.append(joined_string)
         else:
             keywords.append(keyDesc)
 
@@ -133,7 +235,7 @@ def process_hbom(HBOM):
         keywords.append(keyDesc)
 
         for keyword in keywords:
-            #print("loop")
+
             if originalCnt == keyCnt:
                 searchByKeyword = False
 
@@ -162,14 +264,47 @@ def process_hbom(HBOM):
                 for cwe in cve_entry['cweName']:
                     st.write(f"CWE: {cwe}")
 
-                st.write(f"Exploit Score {cve_entry['exploitScore']}")
+            variables = {'mpn': cve_name}
+            results = nexar_client.get_query(QUERY_MPN, variables)
+
+            if results:
+                results_num = results.get("supSearchMpn", {}).get("hits", 0)
+                if results_num > 0:
+                    st.write(" \tAlternative Parts")
+                    alternative_parts_searched = True
+                    for it in results.get("supSearchMpn", {}).get("results", {}):
+                        alternative_parts = it.get("part", {}).get("similarParts", {})
+                        for part in alternative_parts:
+                            part_name = part.get("name")
+                            part_mpn = part.get('mpn')
+                            st.write(f" \tAlternative Part Suggestion: {part_name}")
+                            if part.get('bestDatasheet', {}):
+                                datasheet_url = part.get("bestDatasheet").get('url')
+                                st.write(f" \tPart DataSheet: {datasheet_url}")
+
+                            # search alternative parts for cve's
+                            # sarching by keyword so no need for supplier
+                            cve_lookup(True, part_mpn, "")
+                            if cve_found:
+                                for cve_entry in global_cve_data:
+                                    # Print cve name
+                                    st.write(f" \t\ttCVE: {cve_entry['cveId']}")
+                                    # Print cve description
+                                    st.write(f" \t\tCVE Description: {cve_entry['cveDescription'][0]}")
+                                    # Print cvw
+                                    for cwe in cve_entry['cweName']:
+                                        st.write(f" \t\tCWE: {cwe}")
+                            else:
+                                st.write(f" \t\tNo CVE's Found for part {part_name}")
+                                st.write("")
+
+                else:
+                    st.write("\tNo Alternative Parts Found")
+                    st.write("")
 
         if not cve_found and not searchByKeyword:
             st.write("NO CVEs FOUND")
             st.write()
-
-
-
             
 st.title("HBOM Component Processing")
 
