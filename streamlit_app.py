@@ -30,7 +30,6 @@ def cve_lookup(searchByKeyword, keyword, supplier):
         data = response.json()
         totalResults = data.get('totalResults', 0)
         if 0 < totalResults < 10:
-            cve_found = True  # Set the flag to True
             keywordValid = True
             cve_entries = data.get("vulnerabilities", {})
 
@@ -49,6 +48,7 @@ def cve_lookup(searchByKeyword, keyword, supplier):
                         keywordValid = False
 
                 if keywordValid:
+                    cve_found = True
                     if cve_id and cve_descriptions:
                         # get cve metrics
                         if entry.get('cve', {}).get('metrics', {}).get('cvssMetricV31', {}):
